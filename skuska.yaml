@@ -1,1 +1,77 @@
+heat_template_version: newton
 
+parameters:
+  siet:
+    label: externa siet
+    type: string 
+    description: "popis: externa siet"
+    default: ext-net
+  availability_zone:
+    label: compute1
+    type: string 
+    default: compute1
+  flavor:
+    label: flavor
+    type: string 
+    description: flavor
+    default: linux
+  image:
+    label: image
+    type: string 
+    description: image
+    default: Debian_11_Openstack
+
+resources:
+  network:
+    type: OS::Neutron::Net
+    properties: 
+      name: "Net_is"
+
+  subnet:
+    type: OS::Neutron::Subnet
+    properties:
+      name: "Subnet_is"
+      network_id: {get_resource: network}
+      cidr: 192.168.0.0/16
+      ip_version: 4
+
+  router:
+    type: OS::Neutron::Router
+    properties:
+      external_gateway_info: {network: ext-net}
+
+  router_interface:
+    type: OS::Neutron::RouterInterface
+    properties:
+      router: {get_resource: router}
+      subnet: {get_resource: subnet}
+
+  Server1:
+    type: OS::Nova::Server
+    properties: 
+      name: Server1
+      flavor: {get_param: flavor}
+      image: {get_param: image}
+      networks:
+        - subnet: {get_resource: subnet}
+      availability_zone: {get_param: availability_zone}
+      user_data_format: RAW
+      user_data: |
+        #!/bin/bash
+        apt-get update
+        apt-get install mc -y
+
+  Server2:
+    type: OS::Nova::Server
+    properties: 
+      name: Server2
+      flavor: {get_param: flavor}
+      image: {get_param: image}
+      networks:
+        - subnet: {get_resource: subnet}
+      availability_zone: {get_param: availability_zone}
+      user_data_format: RAW
+      user_data: |
+        #!/bin/bash
+        apt-get update
+        apt-get install mc -y
